@@ -18,7 +18,7 @@ from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),  #默认屏蔽 admin 管理模块
     path('file/', include('container.urls')),
 ]
 if settings.DEBUG:
