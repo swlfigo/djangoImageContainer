@@ -21,6 +21,5 @@ urlpatterns = [
     # path('admin/', admin.site.urls),  #默认屏蔽 admin 管理模块
     path('file/', include('container.urls')),
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL,
+urlpatterns += static(settings.MEDIA_URL,
                           document_root=settings.MEDIA_ROOT)
