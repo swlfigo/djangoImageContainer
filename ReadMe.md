@@ -25,7 +25,7 @@ pip install -r require.txt
 **Q:为什么使用`PM2`呢？**
 **A:** 简单啊，网上拉起 `Django` 项目是通过 `uswgi` 和 `supervisior` 和 `nginx` 配合，达到重启还能启动网站，配置过一次也是非常麻烦, `PM2`也能达到如此效果，所以选择 `PM2` 来管理
 
-####3.1 安装 NodeJS
+#### 3.1 安装 NodeJS
 新版本的 `Nodejs` 里面已经包含了 `npm` , `Centos` 可以使用下面代码安装 `NodeJS`,如果本机已经有 `NodeJS` 环境可跳过此步
 ```
 sudo yum install nodejs
