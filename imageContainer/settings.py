@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 's6m1(t765bsfc=nf6ukn5e2vg)v=o7ni+-*h&m72!wmndun&fa'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     #此处添加绑定的域名，可让外部访问此网址
