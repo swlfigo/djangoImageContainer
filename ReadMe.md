@@ -3,7 +3,7 @@
 
 (2018.11.24 更): 本来以为挺简单的部署，结果踩坑了3天，各种 `Google` , `Baidu` , `Stack Overflow` 查问题终于解决，原来简单部署可能会变为复杂，一些大环境配置与修改本文并不会提及，只会列出曾经的坑点
 
-#前置点:
+# 前置点:
 1. 需要安装 Nginx 环境[小白(`我`)可以用 `宝塔` 面板一键安装,`百度`第一个就是,用这个真的不要太折腾]
 2. `Python3` 环境,推荐 `Python3` , `Django` 听说准备不支持 `Python2`了?
 3. 一些第三方库 `Django` , `djangorestframework` , `gunicorn`(这个也可以用自带的 `uswgi` 替代，只是`uswgi`配置有点麻烦就是了)
@@ -33,6 +33,7 @@ pip install -r require.txt
 
 **Q:为什么使用`PM2`呢？**
 ~~**A:** 简单啊，网上拉起 `Django` 项目是通过 `uswgi` 和 `supervisior` 和 `nginx` 配合，达到重启还能启动网站，配置过一次也是非常麻烦, `PM2`也能达到如此效果，所以选择 `PM2` 来管理~~
+
 **A:** LOL,还是太年轻，还是需要 `uswgi` 或者 `gunicorn` 拉起网站, `PM2` 作用只是代替 `Supervisor`(网上很多教程使用 `Supervisor`) 拉起，网站进程意外退出可以自动重新启动! `Supervisor`配置也是有点麻烦，选择这个 `PM2` 精简一下吧.
 
 
