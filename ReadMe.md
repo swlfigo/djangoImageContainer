@@ -1,9 +1,18 @@
 # Django 简易图床
 由于 `七牛图床` 需要绑定需要备案的域名，过程比较麻烦与漫长。所以使用 `Django` 框架写了一个简易版的图床存储，方便部署在自己的服务器上，以后就能开心继续写 `Markdown` 了 (原来保存在`七牛图床`上的图都用不了了.此项目更好的让大家保存图片，防止丢失[**PS:当然前提你服务器没问题!**])
 
+(2018.11.24 更): 本来以为挺简单的部署，结果踩坑了3天，各种 `Google` , `Baidu` , `Stack Overflow` 查问题终于解决，原来简单部署可能会变为复杂，一些大环境配置与修改本文并不会提及，只会列出曾经的坑点
+
+#前置点:
+1. 需要安装 Nginx 环境[小白(`我`)可以用 `宝塔` 面板一键安装,`百度`第一个就是,用这个真的不要太折腾]
+2. `Python3` 环境,推荐 `Python3` , `Django` 听说准备不支持 `Python2`了?
+3. 一些第三方库 `Django` , `djangorestframework` , `gunicorn`(这个也可以用自带的 `uswgi` 替代，只是`uswgi`配置有点麻烦就是了)
+4. 一颗有耐心的心
+
+
 # Usage:
 
-### 1. 首先拉去项目到服务器本地
+### 1. 首先拉取项目到服务器本地
 ```
 git clone https://github.com/swlfigo/djangoImageContainer.git
 ```
@@ -23,13 +32,17 @@ pip install -r require.txt
 当然，`PM2` 也是能跑 `.sh` , `.py` 等脚本的
 
 **Q:为什么使用`PM2`呢？**
-**A:** 简单啊，网上拉起 `Django` 项目是通过 `uswgi` 和 `supervisior` 和 `nginx` 配合，达到重启还能启动网站，配置过一次也是非常麻烦, `PM2`也能达到如此效果，所以选择 `PM2` 来管理
+~~**A:** 简单啊，网上拉起 `Django` 项目是通过 `uswgi` 和 `supervisior` 和 `nginx` 配合，达到重启还能启动网站，配置过一次也是非常麻烦, `PM2`也能达到如此效果，所以选择 `PM2` 来管理~~
+**A:** LOL,还是太年轻，还是需要 `uswgi` 或者 `gunicorn` 拉起网站, `PM2` 作用只是代替 `Supervisor`(网上很多教程使用 `Supervisor`) 拉起，网站进程意外退出可以自动重新启动! `Supervisor`配置也是有点麻烦，选择这个 `PM2` 精简一下吧.
+
 
 #### 3.1 安装 NodeJS
 新版本的 `Nodejs` 里面已经包含了 `npm` , `Centos` 可以使用下面代码安装 `NodeJS`,如果本机已经有 `NodeJS` 环境可跳过此步
 ```
 sudo yum install nodejs
 ```
+
+
 
 ### 3.2 安装PM2
 根据官网安装方法
@@ -47,6 +60,11 @@ pm2 start start.sh --name imageContainer
 
 通过上面方法可以拉起项目, `--name` 意思是标识这个服务名字，可自行修改
 
+
+**注意:** 这一步可能失败，因为服务器自带的是 `python2.7+` 的环境，上一步安装可能安装到了 `2.7` 环境内，(如果你是用 `虚拟环境 pyenv 之类的`)，此时需要进入项目，切换虚拟环境到你本机`虚拟环境Python版本`中,重新安装依赖！
+不然会出现 `gunicorn command not found` 之类提示，如果解决不了，自行百度了，之前也踩坑很多，不做更多展开讨论了.核心就是要将 `gunicorn` 安装到当前系统环境Python版本中!
+
+
 拉起成功后输入
 ```
 pm2 list
@@ -61,8 +79,8 @@ pm2 save
 ```
 保存修改后，即使重启也能自动开启服务，达到重启也能打开网站功能!
 
-### 5. Nginx 配置(可选)
-(以下配置非必须但建议)
+### 5. Nginx 配置~~(可选)~~
+~~(以下配置非必须但建议)~~(必须)
 成功拉起网站后，可以通过服务器ip访问到，
 
 访问 `ip:8002/file`
@@ -74,21 +92,31 @@ pm2 save
 #### 5.1 Nginx 内网转发
 
 **【此段写给萌新(我)看，大佬可忽略】**
+**踩坑3天的 Nginx!**
 
 打开 `Nginx` 的配置文件,在内容里面修改添加(`只是截取重要部分,更详细配置自行百度 nginx proxy_pass`)
-
 
 ```
 server{
     listen 80;
     server_name 自定义域名(域名可通过阿里云等途径购买);
     
-    location / {
-        proxy_pass http://127.0.0.1:8002; #此端口为上面修改过的项目端口(默认就是8002)
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   Host      $http_host;
+
+    location /static {
+        autoindex on;                                                    
+        alias /项目中static位置/static; 
     }
 
+    location /media {
+        alias /media绝对路径/;      # your Django project's media files
+    }
+
+    location / {            
+        proxy_pass http://127.0.0.1:8002; #此端口为上面修改过的项目端口(默认就是8002)
+        proxy_set_header Host $host;
+        proxy_set_header X-Real_IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
 }
 ```
 
@@ -100,13 +128,28 @@ server{
 
 到此，服务器配置完成
 
-### 6. 项目额外配置
+**踩坑点**
+这里Nginx踩坑了3天，有几个点说一下
+1. 关于静态文件 `404` : 静态文件由 `Django` Debug模式设置为 `False`之后，交由后台(`Nginx` 或 `阿帕奇`)处理，需要再配置文件里面写绝对位置,如上面写的 `/media` 与 `/static` 下的位置
+2. location的转发，需要转发到本地项目端口,再上面 `start.sh` 时候提及过
+3. `403`问题: 宝塔安装的 `Nginx`, 运行期项目之后会显示 `403`,主要因为权限问题，只要将 `Nginx` 配置改一下就可以
 
-打开项目中 `djangoImageContainer/imageContainer` 目录下的 `setting.py`
+![](http://img.isylar.com/media/15430623553115.jpg)
 
+
+
+
+### ~~6. 项目额外配置~~
+**(已经强制更新成False了)**
+**补充一点小知识: True模式下Django默认会读取项目里面设置的 静态文件目录，False时候交由 后台读取静态文件!**
+
+~~打开项目中 `djangoImageContainer/imageContainer` 目录下的 `setting.py~~
+ 
+ 
 ![](http://img.isylar.com/media/15429573822131.jpg)
 
-**再此处将 `DEBUG = False` 设置为 `False`, 默认是 `True` 是因为方便调试，上线项目之后不再打印信息，防止别人窥探信息！！！**
+~~**再此处将 `DEBUG = False` 设置为 `False`, 默认是 `True` 是因为方便调试，上线项目之后不再打印信息，防止别人窥探信息！！！**~~
+
 
 `ALLOWED_HOSTS ` 里面添加自定义域名，访问时候只能通过对应的自定义域名访问数据，其他域名访问返回 `404`
 
