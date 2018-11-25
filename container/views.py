@@ -23,3 +23,6 @@ class FileView(APIView):
         else:
             return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def get(self, request, format=None):
+
+        return Response(None, status=status.HTTP_400_BAD_REQUEST)
